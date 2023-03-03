@@ -14,16 +14,24 @@ namespace TaskTrackerAPI.Services.ProjectService
         {
             try
             {
-                project.Id = Guid.NewGuid();
-                _context.Projects.Add(project);
-                _context.SaveChanges();
-                return "ok";
+                if (project.CompletionDate <= project.StartDate)
+                    return "Completion date cannot be less then start date";
+                if (_context.Projects.FirstOrDefault(x => x.Name == project.Name) == default)
+                {
+                    project.Id = Guid.NewGuid();
+                    project.CreatedOn = DateTime.Now.ToUniversalTime();
+                    project.UpdatedOn = DateTime.Now.ToUniversalTime();
+                    _context.Projects.Add(project);
+                    _context.SaveChanges();
+                    return "ok";
+                }
+                else
+                    return "Project with this name is already exsits";
             }
             catch
             {
                 return "failed";
-            }           
-
+            }
         }
 
         public List<Project> GetAllProjects()
@@ -32,9 +40,60 @@ namespace TaskTrackerAPI.Services.ProjectService
             return projects;
         }
 
-        public Project GetProject(Guid projectId)
+        public Project? GetProjectById(Guid projectId)
         {
             var project = _context.Projects.Find(projectId);
+            if (project == null)
+                return null;
+            return project;
+        }
+        public List<Project>? GetProjectsByDate(string date, string equalType)
+        {
+            List<Project>? project = null;
+
+            if (equalType.Equals("less"))
+            {
+                project = _context.Projects.Where(x => x.StartDate <= DateTime.Parse(date).ToUniversalTime()).ToList();
+            }
+            if (equalType.Equals("more"))
+            {
+                project = _context.Projects.Where(x => x.StartDate >= DateTime.Parse(date).ToUniversalTime()).ToList();
+            }
+            if (project == null)
+                return null;
+            return project;
+        }
+
+        List<Project>? IProjectService.GetProjectsByDates(string startDate, string endDate)
+        {
+            var project = _context.Projects.Where(x => x.StartDate >= DateTime.Parse(startDate).ToUniversalTime() 
+                                                && x.CompletionDate <= DateTime.Parse(endDate).ToUniversalTime()).ToList();
+            if (project == null)
+                return null;
+            return project;
+        }
+
+        List<Project>? IProjectService.GetProjectsByPriorities(int priorityFrom, int priorityTo)
+        {
+            var project = _context.Projects.Where(x => x.Priority >= priorityFrom 
+                                                && x.Priority <= priorityTo).ToList();
+            if (project == null)
+                return null;
+            return project;
+        }
+
+        List<Project>? IProjectService.GetProjectsByPriority(int priority, string equalType)
+        {
+            List<Project>? project = null;
+
+            if (equalType.Equals("less"))
+            {
+                project = _context.Projects.Where(x => x.Priority <= priority).ToList();
+            }
+            if (equalType.Equals("more"))
+            {
+                project = _context.Projects.Where(x => x.Priority >= priority).ToList();
+            }
             if (project == null)
                 return null;
             return project;
@@ -66,20 +125,34 @@ namespace TaskTrackerAPI.Services.ProjectService
 
         public string UpdateProject(Project projectToUpdate, Guid id)
         {
-            var project =  _context.Projects.Find(id);
-            if (project == null)
-                return "failed";
-            
-            if (projectToUpdate.Name is not null)
+            try
+            {
+                var project = _context.Projects.Find(id);
+
+                if (project == null)
+                    return "Project with this id not found";
+
+                if (_context.Projects.FirstOrDefault(x => x.Name != project.Name && x.Name == projectToUpdate.Name) != default)
+                    return "Project with this name is already exists";
+
+
                 project.Name = projectToUpdate.Name;
-            project.StartDate = projectToUpdate.StartDate;
-            project.CompletionDate = projectToUpdate.CompletionDate;
-            project.CurrentStatus = projectToUpdate.CurrentStatus;
-            project.Priority = projectToUpdate.Priority;
+                project.StartDate = projectToUpdate.StartDate;
+                project.CompletionDate = projectToUpdate.CompletionDate;
+                project.CurrentStatus = projectToUpdate.CurrentStatus;
+                project.Priority = projectToUpdate.Priority;
+                project.UpdatedOn = DateTime.Now.ToUniversalTime();
 
-            _context.SaveChanges();
+                _context.SaveChanges();
 
-            return "ok";
-        }
+
+
+                return "ok";
+            }
+            catch
+            {
+                return "failed";
+            }
+        }        
     }
 }

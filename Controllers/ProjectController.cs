@@ -18,17 +18,44 @@ namespace TaskTrackerAPI.Controllers
         public ActionResult<List<Project>> GetAllProjects()
         {
             var allProjects = _projectService.GetAllProjects();
-            if (allProjects.Count == 0)
+            if (allProjects != null && allProjects.Count == 0)
                 return NotFound("No projects in databse");
             return Ok(allProjects);
         }
 
         [HttpGet("{id}")]
-        public ActionResult<Project> GetProject(Guid id)
+        public ActionResult<Project> GetProjectById(Guid id)
         {
-            var result = _projectService.GetProject(id);
+            var result = _projectService.GetProjectById(id);
             if (result is null)
-                return NotFound("Project not found");
+                return NotFound("Project with this id not found");
+            return Ok(result);
+        }
+
+        [HttpGet("startatless/{date}")]
+        public ActionResult<Project> GetProjectsByDateLess(string date)
+        {
+            var result = _projectService.GetProjectsByDate(date, "less");
+            if (result is null)
+                return NotFound("Projects with this filters not found");
+            return Ok(result);
+        }
+
+        [HttpGet("startatmore/{date}")]
+        public ActionResult<Project> GetProjectsByDateMore(string date)
+        {
+            var result = _projectService.GetProjectsByDate(date, "more");
+            if (result is null)
+                return NotFound("Projects with this filters not found");
+            return Ok(result);
+        }
+
+        [HttpGet("{startDate},{endDate}")]
+        public ActionResult<Project> GetProjectsByDates(string startDate, string endDate)
+        {
+            var result = _projectService.GetProjectsByDates(startDate, endDate);
+            if (result is null)
+                return NotFound("Projects with this filters not found");
             return Ok(result);
         }
 
@@ -38,16 +65,17 @@ namespace TaskTrackerAPI.Controllers
             var addedProject = _projectService.AddProject(project);
             if (addedProject == "ok")
                 return Ok();
-            return BadRequest();
+            return BadRequest(addedProject);
         }
 
         [HttpPut("{id}")]
         public ActionResult UpdateProject(Project project, Guid id)
         {
             var updateResult = _projectService.UpdateProject(project, id);
-            if (updateResult == "failed")
-                return BadRequest();
-            return Ok();
+            if (updateResult == "ok")
+                return Ok();
+            return BadRequest(updateResult);
+
         }
         
         [HttpDelete("{id}")]

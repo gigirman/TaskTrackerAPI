@@ -13,8 +13,8 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<TaskTrackerContext>();
-builder.Services.AddScoped<IProjectService, ProjectService>();
-builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddTransient<IProjectService, ProjectService>();
+builder.Services.AddTransient<ITaskService, TaskService>();
 builder.Services.AddSwaggerGen();
 
 

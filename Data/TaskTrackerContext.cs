@@ -7,9 +7,8 @@ namespace TaskTrackerAPI
 {
     public partial class TaskTrackerContext : DbContext
     {
-        public TaskTrackerContext()
-        {
-        }
+        public DbSet<Tasks> Tasks { get; set; }
+        public DbSet<Project> Projects { get; set; }
 
         public TaskTrackerContext(DbContextOptions<TaskTrackerContext> options)
             : base(options)
@@ -27,9 +26,6 @@ namespace TaskTrackerAPI
             {
                 optionsBuilder.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
             }
-        }
-
-        public DbSet<Tasks> Tasks { get; set; }
-        public DbSet<Project> Projects { get; set; }
+        }        
     }
 }
